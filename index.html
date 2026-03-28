@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POTENTIAL UNLOCKED — NOVA</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>POTENTIAL UNLOCKED</h1>
+        <p>NOVA — shaxsiy strateging</p>
+      </header>
+
+      <section class="panel chat-panel">
+        <h2>Suhbat</h2>
+        <div id="chat" class="chat" aria-live="polite"></div>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" type="text" placeholder="Javobingizni yozing..." autocomplete="off" />
+          <button type="submit">Yuborish</button>
+        </form>
+        <div id="choices" class="choices"></div>
+      </section>
+
+      <section class="panel grid-two">
+        <div>
+          <h2>Dashboard</h2>
+          <div id="dashboard" class="card"></div>
+        </div>
+        <div>
+          <h2>Roadmap</h2>
+          <div id="roadmap" class="card"></div>
+        </div>
+      </section>
+
+      <section class="panel grid-two">
+        <div>
+          <h2>Flow Timer</h2>
+          <div class="timer card">
+            <p id="timer-label">25:00</p>
+            <div class="timer-actions">
+              <button id="start-timer" type="button">Boshlash</button>
+              <button id="reset-timer" type="button">Qayta</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2>Progress Feed</h2>
+          <div id="progress-feed" class="card"></div>
+          <h3 class="sub">Notification Engine (Adaptive)</h3>
+          <div id="notifications" class="card"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
