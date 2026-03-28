@@ -1,4 +1,43 @@
 const stateKey = "nova-state-v1";
+const DAYS_IN_WEEK = 7;
+const STUDENT_ROADMAP = `📍 HOZIRGI BOSQICH: Talaba
+
+🔵 ZUDLIK BILAN (bu semestr):
+• Ilmiy rahbar topib mini-research boshlash
+• LinkedIn profilni to'ldirib 3 mentor bilan bog'lanish
+• 1 ta hackathon yoki grantga topshirish
+
+🟡 3-6 OY ICHIDA:
+• Amaliyot (stajirovka) uchun 15ta target ro'yxat tuzish
+• Portfolio: 2 ta real loyiha + GitHub case
+• IELTS/CEFR yoki sohaga mos sertifikat boshlash
+
+🟢 BITIRUV OLDIDAN:
+• Erasmus+: https://erasmus-plus.ec.europa.eu/
+• YSEALI: https://yseali.state.gov/
+• Startup platformalar: https://www.ycombinator.com/
+
+⚡ SALOHIYAT HISOBLASH:
+Agar hozir bu 3 narsani qilsang — 2 yildan keyin stajirovka + xalqaro grant yo'nalishida kuchli profilga ega bo'lasan.`;
+const WORKER_ROADMAP = `📊 KARYERA DIAGNOSTIKASI
+
+🔴 HOZIRGI HOLAT:
+Sen hozir o'sish fazasidasan. Bu sohadagi cho'qqiga odatda 5-8 yil ketadi — lekin tezlashtirilgan yo'l bor.
+
+🟠 TEZLASHTIRILGAN YO'L (12 oy):
+• 1 ta kuchli sertifikat + 2 ta yuqori talab skill
+• Kompaniya ichida natijani o'lchab ko'rinish oshirish
+• Har oy 3 ta senior bilan network suhbat
+• Daromadni oshiradigan skill stack (analitika + AI + kommunikatsiya)
+
+🔵 CHO'QQI MANZARA:
+Yuqori lavozim: Lead/Head daraja — bozor oralig'i yuqori diapazonda.
+Asosiy 3 bloker: noaniq brend, tor network, natija paketi yo'q.
+Yechim: portfel, mentor feedback, aniq impact metrika.
+
+⚡ MUHIM — ALTERNATIVA TAKLIFI:
+Sening mavjud ko'nikmalaring Product, Data Ops, va Consulting yo'nalishlarida ham juda qimmat.
+To'g'ri fokus bilan 12-18 oyda sezilarli sakrash qilish mumkin.`;
 
 const defaultState = {
   messages: [],
@@ -129,6 +168,29 @@ Bitta savoldan boshlaymiz:
   ]);
 }
 
+function resolveRole(text) {
+  const mapping = {
+    A: "student",
+    B: "worker",
+    C: "mixed",
+    "A — Universitet": "student",
+    "B — Ish": "worker",
+  };
+  const trimmed = text.trim();
+  if (mapping[trimmed]) return mapping[trimmed];
+  const upperFirst = trimmed.toUpperCase().charAt(0);
+  if (mapping[upperFirst]) return mapping[upperFirst];
+  return "mixed";
+}
+
+function getCurrentHourLabel() {
+  return `${String(new Date().getHours()).padStart(2, "0")}:00`;
+}
+
+function getWeeklyProgressPercent() {
+  return Math.min(100, Math.round((state.week.completed / DAYS_IN_WEEK) * 100));
+}
+
 function setCurrentChoices() {
   switch (state.phase) {
     case "phase0":
@@ -152,18 +214,11 @@ function setCurrentChoices() {
       break;
     case "phase4":
       if (state.step === 0) {
-        const nowHour = String(new Date().getHours()).padStart(2, "0") + ":00";
         setChoices([
           { label: `A — 10 daqiqa harakat`, value: "todoA" },
           { label: `B — 15 daqiqa harakat`, value: "todoB" },
           { label: `C — 5 daqiqa harakat`, value: "todoC" },
         ]);
-        if (!lastBotMessageIncludes(nowHour)) {
-          addMessage(
-            "bot",
-            `Katta rejalar zo'r. Lekin hozir — faqat bitta savol:\n\nBugun soat ${nowHour} bor.`
-          );
-        }
       } else {
         setChoices([]);
       }
@@ -206,14 +261,7 @@ function handleUserInput(raw) {
 }
 
 function handlePhase0(text) {
-  const mapping = {
-    A: "student",
-    B: "worker",
-    C: "mixed",
-    "A — Universitet": "student",
-    "B — Ish": "worker",
-  };
-  state.role = mapping[text] || (text.toUpperCase().startsWith("A") ? "student" : text.toUpperCase().startsWith("B") ? "worker" : "mixed");
+  state.role = resolveRole(text);
   state.phase = "phase1";
   state.step = 0;
   saveState();
@@ -251,8 +299,7 @@ function handlePhase1(text) {
 
   if (state.step === 2) {
     state.recognition.q3 = text;
-    const name = "Sen";
-    const recognition = `${name}. Men seni eshitdim.\n\nSening javobingga qaraganda, ko'proq ${state.recognition.q1} tomoni kuchli. ${state.recognition.q2}da soatlab qolishing — bu kuchli flow signali.\n\nBu kuchli narsa. Lekin hozir to'g'ri kanal yo'q shuning uchun energiya yo'qolayapti. Buni o'zgartiramiz.`;
+    const recognition = `Sen. Men seni eshitdim.\n\nSening javobingga qaraganda, ko'proq ${state.recognition.q1} tomoni kuchli. ${state.recognition.q2}da soatlab qolishing — bu kuchli flow signali.\n\nBu kuchli narsa. Lekin hozir to'g'ri kanal yo'q shuning uchun energiya yo'qolayapti. Buni o'zgartiramiz.`;
     addMessage("bot", recognition);
 
     state.phase = "phase2";
@@ -310,20 +357,18 @@ function handlePhase2(text) {
 function handlePhase3(text) {
   if (state.role === "student") {
     state.profile.course = text;
-    const roadmap = `📍 HOZIRGI BOSQICH: Talaba\n\n🔵 ZUDLIK BILAN (bu semestr):\n• Ilmiy rahbar topib mini-research boshlash\n• LinkedIn profilni to'ldirib 3 mentor bilan bog'lanish\n• 1 ta hackathon yoki grantga topshirish\n\n🟡 3-6 OY ICHIDA:\n• Amaliyot (stajirovka) uchun 15ta target ro'yxat tuzish\n• Portfolio: 2 ta real loyiha + GitHub case\n• IELTS/CEFR yoki sohaga mos sertifikat boshlash\n\n🟢 BITIRUV OLDIDAN:\n• Erasmus+: https://erasmus-plus.ec.europa.eu/\n• YSEALI: https://yseali.state.gov/\n• Startup platformalar: https://www.ycombinator.com/\n\n⚡ SALOHIYAT HISOBLASH:\nAgar hozir bu 3 narsani qilsang — 2 yildan keyin stajirovka + xalqaro grant yo'nalishida kuchli profilga ega bo'lasan.`;
     state.phase = "phase4";
     state.step = 0;
     buildDailyTodo();
-    addMessage("bot", roadmap);
+    addMessage("bot", STUDENT_ROADMAP);
     addMessage("bot", flowProtocolMessage());
     promptTodayStep();
   } else {
     state.profile.position = text;
-    const roadmap = `📊 KARYERA DIAGNOSTIKASI\n\n🔴 HOZIRGI HOLAT:\nSen hozir o'sish fazasidasan. Bu sohadagi cho'qqiga odatda 5-8 yil ketadi — lekin tezlashtirilgan yo'l bor.\n\n🟠 TEZLASHTIRILGAN YO'L (12 oy):\n• 1 ta kuchli sertifikat + 2 ta yuqori talab skill\n• Kompaniya ichida natijani o'lchab ko'rinish oshirish\n• Har oy 3 ta senior bilan network suhbat\n• Daromadni oshiradigan skill stack (analitika + AI + kommunikatsiya)\n\n🔵 CHO'QQI MANZARA:\nYuqori lavozim: Lead/Head daraja — bozor oralig'i yuqori diapazonda.\nAsosiy 3 bloker: noaniq brend, tor network, natija paketi yo'q.\nYechim: portfel, mentor feedback, aniq impact metrika.\n\n⚡ MUHIM — ALTERNATIVA TAKLIFI:\nSening mavjud ko'nikmalaring Product, Data Ops, va Consulting yo'nalishlarida ham juda qimmat.\nTo'g'ri fokus bilan 12-18 oyda sezilarli sakrash qilish mumkin.`;
     state.phase = "phase4";
     state.step = 0;
     buildDailyTodo();
-    addMessage("bot", roadmap);
+    addMessage("bot", WORKER_ROADMAP);
     addMessage("bot", flowProtocolMessage());
     promptTodayStep();
   }
@@ -340,7 +385,7 @@ function flowProtocolMessage() {
 }
 
 function promptTodayStep() {
-  const nowHour = String(new Date().getHours()).padStart(2, "0") + ":00";
+  const nowHour = getCurrentHourLabel();
   const must = state.todo.must || "MUST vazifani boshlash";
   const should = state.todo.should[0] || "SHOULD vazifani rejalash";
   const bonus = state.todo.bonus || "BONUS kontaktinga yozish";
@@ -429,7 +474,7 @@ function renderRoadmap() {
 
 function renderProgress() {
   const percent = Math.round((state.todo.doneCount / Math.max(state.todo.totalCount, 1)) * 100);
-  const weekPercent = Math.min(100, Math.round((state.week.completed / 7) * 100));
+  const weekPercent = getWeeklyProgressPercent();
   const snapshot = `7 kun oldin sen yo'nalishni aniqlashga harakat qilayotganding.\nHozir esa ${state.week.completed} ta harakat qilding. Farqni ko'ryapsanmi? Bu sen.`;
 
   feedEl.textContent = `Haftalik progress: ${state.week.completed} ta task\nProgress: ${weekPercent}%\n\nBugungi progress: ${percent}%\n\n${snapshot}`;
@@ -441,10 +486,7 @@ function renderNotifications() {
   const night = state.todo.doneCount === 0
     ? "22:00 — Bugun task qilinmadi. Ertaga? Yoki qiyin bo'lganini ayt — o'zgartiramiz."
     : "22:00 — Bugungi ritm saqlandi. Ertaga ham shu usulni davom ettiramiz.";
-  const weekly = `Yakshanba — Bu haftada ${state.week.completed} ta task bajarding. Bu ${Math.min(
-    100,
-    Math.round((state.week.completed / 7) * 100)
-  )}% progress.`;
+  const weekly = `Yakshanba — Bu haftada ${state.week.completed} ta task bajarding. Bu ${getWeeklyProgressPercent()}% progress.`;
 
   notificationsEl.textContent = `${morning}\n\n${night}\n\n${weekly}`;
 }
